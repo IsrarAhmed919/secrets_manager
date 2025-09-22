@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 provider "azurerm" {
   features {}
 }
@@ -6,17 +15,15 @@ data "azurerm_client_config" "current" {}
 
 resource "azurerm_resource_group" "rg" {
   name     = "fastapi-rg"
-  location = "East US"
+  location = "East Asia"
 }
 
-resource "azurerm_app_service_plan" "plan" {
+resource "azurerm_service_plan" "plan" {
   name                = "fastapi-plan"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  sku {
-    tier = "Basic"
-    size = "B1"
-  }
+  sku_name            = "B1"
+  os_type             = "Linux"
 }
 
 resource "azurerm_key_vault" "kv" {
@@ -35,20 +42,30 @@ resource "azurerm_key_vault_access_policy" "policy" {
   secret_permissions = ["Get", "List"]
 }
 
-resource "azurerm_key_vault_secret" "mysecret" {
-  name         = "MySecret"
+resource "azurerm_key_vault_secret" "new_secret" {
+  name         = "new-secret"
   value        = "super-secret-value"
   key_vault_id = azurerm_key_vault.kv.id
 }
 
-resource "azurerm_app_service" "app" {
+resource "azurerm_linux_web_app" "app" {
   name                = "fastapi-app-service"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  app_service_plan_id = azurerm_app_service_plan.plan.id
+  service_plan_id     = azurerm_service_plan.plan.id
+
+  site_config {
+    application_stack {
+      python_version = "3.10"
+    }
+  }
 
   app_settings = {
     "WEBSITES_PORT" = "8000"
-    "MY_SECRET"     = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mysecret.id})"
+    "MY_SECRET"     = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.new_secret.id})"
   }
+}
+
+output "app_service_url" {
+  value = azurerm_linux_web_app.app.default_hostname
 }
