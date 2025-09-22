@@ -30,3 +30,5 @@ jobs:
         with:
           app-name: fastapi-app-service
           package: .
+
+          
