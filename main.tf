@@ -62,3 +62,7 @@ resource "azurerm_app_service" "app" {
     "MY_SECRET"     = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mysecret.id})"
   }
 }
+
+output "app_service_name" {
+  value = azurerm_app_service.app.name
+}

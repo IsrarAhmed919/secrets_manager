@@ -30,11 +30,8 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
           ARM_TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
 
-
       - name: Deploy FastAPI
         uses: azure/webapps-deploy@v2
         with:
           app-name: fastapi-app-service
           package: .
-
-
